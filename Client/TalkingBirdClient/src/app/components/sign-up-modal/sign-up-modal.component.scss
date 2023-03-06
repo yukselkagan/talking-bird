@@ -1,0 +1,102 @@
+
+
+
+
+.sign-up-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+
+
+  background-color: white;
+
+  width: 600px;
+  max-width: 80%;
+
+  height: 400px;
+  max-height: 80%;
+
+
+  border: 1px solid black;
+  border-radius: 10px;
+  z-index: 10;
+
+  transform: translate(-50%, -50%) scale(0);
+  transition: 200ms ease-in-out;
+
+}
+
+.sign-up-modal.active{
+  transform: translate(-50%, -50%) scale(1);
+}
+
+
+.sign-up-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 10px 15px;
+  border-bottom: 1px solid grey;
+}
+
+.sign-up-modal-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.modal-close-button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.sign-up-modal-body {
+  padding: 10px 15px;
+
+  overflow: auto;
+
+  //background-color: rebeccapurple;
+
+  height: 85%;
+}
+
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background-color: rgba(0, 0, 0, .5);
+  opacity: 0;
+
+  pointer-events: none;
+  transition: 200ms ease-in-out;
+}
+
+.overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+
+
+
+.trend-text{
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.trend-text-sub{
+  font-size: 14px;
+  color : rgba(33, 37, 41, 0.75);
+}
+
+
+
+
