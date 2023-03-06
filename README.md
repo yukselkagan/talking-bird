@@ -5,7 +5,7 @@
 Talking bird is a microservice project inspired by Twitter.
 Have 5 services:  
 1)Identity service: Handle authentication  
-2)Post service: Handle main post    objectives like share something or like.
+2)Post service: Handle main post    objectives like share something or like.  
 3)Comment service: Handle comments for posts  
 4)Stock service: Keep static files  
 5)Trend service: Decide trends based on posts
