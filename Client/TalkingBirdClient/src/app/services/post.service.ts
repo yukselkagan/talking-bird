@@ -18,9 +18,18 @@ export class PostService {
     return this.httpClient.get<any>(this.baseUrl+'/posts');
   }
 
+  public getPostsSelf(){
+    return this.httpClient.get<any>(this.baseUrl+'/posts/self');
+  }
+
   public likePost(postId: any){
     return this.httpClient.post<any>(this.baseUrl+'/posts/like/'+postId, null);
   }
+
+  public revokeLike(postId: any){
+    return this.httpClient.delete<any>(this.baseUrl+'/posts/like/'+postId);
+  }
+
 
 
 }

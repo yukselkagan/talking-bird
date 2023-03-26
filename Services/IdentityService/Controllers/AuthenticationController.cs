@@ -75,30 +75,47 @@ namespace IdentityService.Controllers
         [AllowAnonymous]
         public async Task<ActionResult> Register(UserRegisterDto userCreateDto)
         {
-            var sameEmailUser = (await _userRepository.Get(x => x.Email == userCreateDto.Email)).FirstOrDefault();
-            var sameUserNameUser = (await _userRepository.Get(x => x.UserName == userCreateDto.UserName)).FirstOrDefault();
-            if(sameEmailUser != null) { return BadRequest("Email already taken"); };
-            if(sameUserNameUser != null) { return BadRequest("User name already taken"); };
-
-            var mappedUser = _mapper.Map<User>(userCreateDto);
-
-            byte[] salt;
-            var passwordHash = PasswordService.CreatePasswordHash(userCreateDto.Password, out salt);
-
-            mappedUser.PasswordHash = passwordHash;
-            mappedUser.PasswordSalt = salt;
-
-            await _userRepository.Insert(mappedUser);
-            await _userRepository.Save();
-
-            var tokenString = _tokenService.CreateAccessToken(mappedUser);
-            var userToken = new UserToken()
+            try
             {
-                User = mappedUser,
-                AccessToken = tokenString
-            };
+                var sameEmailUser = (await _userRepository.Get(x => x.Email == userCreateDto.Email)).FirstOrDefault();
+                var sameUserNameUser = (await _userRepository.Get(x => x.UserName == userCreateDto.UserName)).FirstOrDefault();
+                if (sameEmailUser != null) { return BadRequest("Email already taken"); };
+                if (sameUserNameUser != null) { return BadRequest("User name already taken"); };
 
-            return Ok(userToken);
+                var mappedUser = _mapper.Map<User>(userCreateDto);
+
+                byte[] salt;
+                var passwordHash = PasswordService.CreatePasswordHash(userCreateDto.Password, out salt);
+
+                mappedUser.PasswordHash = passwordHash;
+                mappedUser.PasswordSalt = salt;
+
+                await _userRepository.Insert(mappedUser);
+                await _userRepository.Save();
+
+                var tokenString = _tokenService.CreateAccessToken(mappedUser);
+                var userToken = new UserToken()
+                {
+                    User = mappedUser,
+                    AccessToken = tokenString
+                };
+
+                var userCreatedContract = new UserCreated()
+                {
+                    UserId = mappedUser.UserId,
+                    Email = mappedUser.Email,
+                    UserName = mappedUser.UserName,
+                    DisplayName = mappedUser.DisplayName,
+                    ProfileImage = mappedUser.ProfileImage
+                };
+                await _publishEndpoint.Publish(userCreatedContract);
+
+                return Ok(userToken);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }         
         }
 
         [HttpPost("token")]
@@ -127,6 +144,40 @@ namespace IdentityService.Controllers
             return Ok(userToken);
         }
 
+        [HttpPatch("user/display-name")]
+        public async Task<ActionResult> ChangeDisplayName(UserChangeNameDto userChangeNameDto)
+        {
+            try
+            {
+                int userId = HttpContext.User.ReadUserId();
+                var user = await _userRepository.GetById(userId);
+                if (user == null)
+                {
+                    throw new Exception("Can not find user");
+                }
+
+                user.DisplayName = userChangeNameDto.DisplayName;
+                await _userRepository.Update(user);
+                await _userRepository.Save();
+
+                var userUpdatedContract = new UserUpdated()
+                {
+                    UserId = user.UserId,
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    DisplayName = user.DisplayName,
+                    ProfileImage = user.ProfileImage
+                };
+                await _publishEndpoint.Publish(userUpdatedContract);
+
+                return Ok("Display name changed");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
+        }
 
 
         [HttpGet("test")]

@@ -2,12 +2,17 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PostService.Clients;
-using TalkingBird.Contracts;
 using PostService.Data.Repository;
 using PostService.Dtos;
 using PostService.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Net.Http.Headers;
+using AutoMapper;
+using System.Linq.Expressions;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Distributed;
+using PostService.Extensions;
+using TalkingBirdContracts;
 
 namespace PostService.Controllers
 {
@@ -19,14 +24,21 @@ namespace PostService.Controllers
         private readonly ILikeRepository _likeRepository;
         private readonly IdentityServiceClient _identityServiceClient;
         private readonly IPublishEndpoint _publishEndpoint;
-        
+        private readonly IMapper _mapper;
+        private readonly IMemoryCache _memoryCache;
+        private readonly IDistributedCache _cache;
+
         public PostsController(IPostRepository postRepository, ILikeRepository likeRepository,
-            IdentityServiceClient identityServiceClient, IPublishEndpoint publishEndpoint)
+            IdentityServiceClient identityServiceClient, IPublishEndpoint publishEndpoint, IMapper mapper,
+            IMemoryCache memoryCache, IDistributedCache cache)
         {
             _postRepository = postRepository;
             _likeRepository = likeRepository;
             _identityServiceClient = identityServiceClient;
             _publishEndpoint = publishEndpoint;
+            _mapper = mapper;
+            _memoryCache = memoryCache;
+            _cache = cache;
         }
 
 
@@ -36,14 +48,118 @@ namespace PostService.Controllers
         {          
             try
             {
-                var posts = await _postRepository.Get(orderBy: q => q.OrderByDescending(p => p.CreatedAt));
-                return Ok(posts);
+                var userId = await ReadUserIdFromService();
+
+                string recordKey = "PostAll_" + $"{userId}_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
+                IEnumerable<PostDto> postDtos;
+                IEnumerable<Post> postsFromCache = await _cache.GetRecordAsync<IEnumerable<Post>>(recordKey);
+
+                if (postsFromCache == null)
+                {
+                    var posts = await _postRepository.Get(orderBy: q => q.OrderByDescending(p => p.CreatedAt),
+                    includeProperties: "User");
+
+                    await _cache.SetRecordAsync<IEnumerable<Post>>(recordKey, posts);
+
+                    postDtos = posts.Select(x =>
+                    {
+                        var dto = _mapper.Map<PostDto>(x);
+                        var haveLike = ((_likeRepository.Get(filter: x => x.UserId == userId && x.PostId == dto.PostId)).Result).Count() > 0;
+                        dto.UserLiked = haveLike;
+                        return dto;
+                    });
+
+                }
+                else
+                {
+                    postDtos = postsFromCache.Select(x =>
+                    {
+                        var dto = _mapper.Map<PostDto>(x);
+                        var haveLike = ((_likeRepository.Get(filter: x => x.UserId == userId && x.PostId == dto.PostId)).Result).Count() > 0;
+                        dto.UserLiked = haveLike;
+                        return dto;
+                    });
+                }
+
+                return Ok(postDtos);
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }         
         }
+
+        [HttpGet("self")]
+        public async Task<ActionResult> GetPostSelf()
+        {
+            try
+            {
+                var userId = await ReadUserIdFromService();
+
+                string recordKey = "PostSelf_" + $"{userId}_" + DateTime.Now.ToString("yyyyMMdd_hhmm");
+                IEnumerable<Post> posts;
+                IEnumerable<Post> postsFromMemoryCache = _memoryCache.Get<IEnumerable<Post>>(recordKey);
+
+                if(postsFromMemoryCache == null)
+                {
+                    var postsFromDb = await _postRepository.Get(orderBy: q => q.OrderByDescending(p => p.CreatedAt),
+                    includeProperties: "User", filter: x => x.UserId == userId);
+                    _memoryCache.Set(recordKey, postsFromDb, TimeSpan.FromSeconds(2));
+
+                    posts = postsFromDb;
+                }
+                else
+                {
+                    posts = postsFromMemoryCache;
+                }
+
+                var postDtos = posts.Select(x =>
+                {
+                    var dto = _mapper.Map<PostDto>(x);
+                    var haveLike = ((_likeRepository.Get(filter: x => x.UserId == userId && x.PostId == dto.PostId)).Result).Count() > 0;
+                    dto.UserLiked = haveLike;
+                    return dto;
+                });
+
+                return Ok(postDtos);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("filtered")]
+        public async Task<ActionResult> GetPostsWithFilter(string filterName)
+        {
+            try
+            {
+                var userId = await ReadUserIdFromService();                
+
+                var posts = await _postRepository.Get(orderBy: q => q.OrderByDescending(p => p.CreatedAt),
+                    includeProperties: "User");
+                var postDtos = posts.Select(x =>
+                {
+                    var dto = _mapper.Map<PostDto>(x);
+                    var haveLike = ((_likeRepository.Get(filter: x => x.UserId == userId && x.PostId == dto.PostId)).Result).Count() > 0;
+                    dto.UserLiked = haveLike;
+                    return dto;
+                });
+
+                if(filterName == "Liked")
+                {
+                    postDtos = postDtos.Where(x => x.UserLiked == true);
+                }
+
+                return Ok(postDtos);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
 
         [HttpGet("{id}")]
         [AllowAnonymous]
@@ -80,10 +196,10 @@ namespace PostService.Controllers
                 {
                     PostId = newPost.PostId,
                     Content = newPost.Content,
-                    UserId = 7,
+                    UserId = userId,
                     LikeCount = newPost.LikeCount,
                 };
-                _publishEndpoint.Publish(postContract);
+                await _publishEndpoint.Publish(postContract);
 
                 return Ok(newPost);
             }
@@ -147,7 +263,7 @@ namespace PostService.Controllers
             await _postRepository.Update(targetPost);
             await _postRepository.Save();
 
-            return Ok("Liked to post");
+            return Ok(newLike);
         }
 
         [HttpDelete("like/{postId}")]
@@ -173,8 +289,13 @@ namespace PostService.Controllers
             await _postRepository.Update(targetPost);
             await _postRepository.Save();
 
-            return Ok("Like revoked");
+            return Ok(targetLike);
         }
+
+        
+
+
+
 
 
         [HttpGet("test")]
@@ -190,11 +311,21 @@ namespace PostService.Controllers
             return Ok("Tested");
         }
 
+
+
+
         private async Task<int> ReadUserIdFromService()
         {
-            var accessToken = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
-            var userFromService = await _identityServiceClient.GetUserSelf(accessToken);
-            return userFromService.UserId;
+            try
+            {
+                var accessToken = Request.Headers[HeaderNames.Authorization].ToString().Replace("Bearer ", "");
+                var userFromService = await _identityServiceClient.GetUserSelf(accessToken);
+                return userFromService.UserId;
+            }
+            catch (Exception)
+            {
+                return 0;
+            }          
         }
 
 

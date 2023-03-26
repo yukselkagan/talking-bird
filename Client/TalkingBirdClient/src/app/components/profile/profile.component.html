@@ -1,1 +1,81 @@
-<p>profile works!</p>
+<div class="bg-light d-flex align-items-end" style="min-height: 150px">
+  <div class="">
+    <div>
+      <img
+        src="assets/images/default-profile-image.jpg"
+        width="100px"
+        height="100px"
+        class="user-image border mb-3 ms-3"
+      />
+    </div>
+  </div>
+</div>
+
+<div>
+  <div style="font-weight: bold">
+    {{
+      processProfileDisplayName(
+        commonInformation.userName,
+        commonInformation.displayName
+      )
+    }}
+  </div>
+
+  <div>@{{ commonInformation.userName }}</div>
+</div>
+
+<div class="mt-3 d-flex justify-content-between border-bottom">
+  <div>Posts</div>
+
+  <div>Media</div>
+
+  <div>Likes</div>
+</div>
+
+<div class="mt-3">
+  <div *ngFor="let post of postList">
+    <div class="d-flex mt-2">
+      <div>
+        <img
+          src="assets/images/default-profile-image.jpg"
+          width="50px"
+          height="50px"
+          class="post-user-image"
+        />
+      </div>
+
+      <div class="ms-2">
+        <div class="d-flex">
+          <div class="post-user-name">{{ post["user"]["userName"] }}</div>
+          <div class="ms-2">
+            @{{
+              processProfileDisplayName(
+                post["user"]["userName"],
+                post["user"]["displayName"]
+              )
+            }}
+          </div>
+        </div>
+
+        <div [innerHTML]="colorHashtag(post['content'])"></div>
+
+        <div class="d-flex">
+          <div><i class="bi bi-chat"></i> 0</div>
+
+          <div class="ms-5"><i class="bi bi-repeat"></i> 0</div>
+          <div class="ms-5">
+            <i
+              class="bi cursor-pointer"
+              (click)="likeInteraction(post['postId'], post['userLiked'])"
+              [class]="{
+                'bi-heart-fill': post['userLiked'],
+                'bi-heart': !post['userLiked']
+              }"
+            ></i>
+            {{ post["likeCount"] }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

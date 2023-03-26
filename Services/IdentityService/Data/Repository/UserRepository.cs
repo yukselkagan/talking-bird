@@ -60,6 +60,11 @@ namespace IdentityService.Data.Repository
             dbSet.Add(user);
         }
 
+        public async Task Update(User entityToUpdate)
+        {
+            dbSet.Attach(entityToUpdate);
+            _context.Entry(entityToUpdate).State = EntityState.Modified;
+        }
 
         public async Task Save()
         {

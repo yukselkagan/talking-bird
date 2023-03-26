@@ -1,3 +1,4 @@
+import { CommonService } from './../../services/common.service';
 import { Subscription } from 'rxjs';
 import { CommonInformation } from './../../models/common-information';
 import { DataTransferService } from './../../services/data-transfer.service';
@@ -13,7 +14,8 @@ import { faDove } from '@fortawesome/free-solid-svg-icons';
 })
 export class MainComponent implements OnInit{
 
-  constructor(private postService: PostService, private dataTransferService: DataTransferService){}
+  constructor(private postService: PostService,
+    private dataTransferService: DataTransferService, private commonService: CommonService){}
 
   ngOnInit(): void {
     this.getAllPosts();
@@ -73,19 +75,57 @@ export class MainComponent implements OnInit{
     })
   }
 
-  likePost(postId: any){
-    console.log(postId);
+  likeInteraction(postId: any, userLiked:any){
+    if(userLiked == false){
+      this.likePost(postId);
+    }else{
+      this.revokeLike(postId);
+    }
+  }
 
-    this.postService.likePost(postId).subscribe({
+  revokeLike(postId: any){
+    this.postService.revokeLike(postId).subscribe({
       next: (response) => {
         console.log(response);
+        this.getAllPosts();
       },
       error: (errorResponse) => {
         console.log(errorResponse);
       }
     })
-
   }
+
+  likePost(postId: any){
+    this.postService.likePost(postId).subscribe({
+      next: (response) => {
+        console.log(response);
+        this.getAllPosts();
+      },
+      error: (errorResponse) => {
+        console.log(errorResponse);
+      }
+    })
+  }
+
+  public processProfileDisplayName(userName:any, displayName:any): string{
+    var response = this.commonService.processProfileDisplayName(userName, displayName);
+    return response;
+  }
+
+  public colorHashtag(text:string){
+    let createdText = "";
+    let words = text.split(" ");
+    for (let index = 0; index < words.length; index++) {
+      let targetWord = words[index];
+      if(targetWord[0] == "#"){
+        targetWord = `<span class='text-primary' >${targetWord}</span>`;
+      }
+      createdText += targetWord + " ";
+    }
+
+    return createdText;
+  }
+
 
 
 }

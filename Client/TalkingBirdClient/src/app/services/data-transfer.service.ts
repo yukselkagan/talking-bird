@@ -1,6 +1,6 @@
 import { CommonInformation } from './../models/common-information';
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { EventEmitter, Injectable } from '@angular/core';
+import { BehaviorSubject, Subscription } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +15,7 @@ export class DataTransferService {
   changeCommonInformation(newInformation: CommonInformation){
     this.commonInformationSource.next(newInformation);
   }
+
 
 
 }

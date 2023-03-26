@@ -12,7 +12,7 @@ using PostService.Data;
 namespace PostService.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20230306161310_mig1")]
+    [Migration("20230319151014_mig1")]
     partial class mig1
     {
         /// <inheritdoc />
@@ -55,6 +55,9 @@ namespace PostService.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PostId"));
 
+                    b.Property<int>("CommentCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -68,42 +71,51 @@ namespace PostService.Migrations
                     b.Property<int>("LikeCount")
                         .HasColumnType("int");
 
+                    b.Property<int>("RepostCount")
+                        .HasColumnType("int");
+
                     b.Property<int>("RepostId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("PostId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("PostService.Model.User", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ExternalUserId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("PostService.Model.Post", b =>
+                {
+                    b.HasOne("PostService.Model.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

@@ -13,6 +13,7 @@ namespace IdentityService.Data.Repository.Interfaces
             string includeProperties = "");
         public Task<User> GetById(object id);
         public Task Insert(User user);
+        public Task Update(User entityToUpdate);
         public Task Save();
 
     }

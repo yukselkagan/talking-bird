@@ -56,7 +56,6 @@ namespace PostService.Data.Repository
         public async Task Insert(Post post)
         {
             await _dbSet.AddAsync(post);
-            await _context.SaveChangesAsync();
         }
 
         public async Task Delete(object id)

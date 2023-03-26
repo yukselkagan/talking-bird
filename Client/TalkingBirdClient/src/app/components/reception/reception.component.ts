@@ -1,3 +1,4 @@
+import { DataTransferService } from 'src/app/services/data-transfer.service';
 import { SignUpModalComponent } from './../sign-up-modal/sign-up-modal.component';
 import { LoginModalComponent } from './../login-modal/login-modal.component';
 import { Component, ElementRef, ViewChild } from '@angular/core';
@@ -13,6 +14,7 @@ export class ReceptionComponent {
   @ViewChild('overlay') overlayElementRef!: ElementRef;
   @ViewChild('loginModal') loginModal!: LoginModalComponent;
   @ViewChild('signUpModal') signUpModal!: SignUpModalComponent;
+
 
 
   // openModal(){

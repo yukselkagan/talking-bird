@@ -7,6 +7,7 @@ namespace PostService.Data
     {
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
         {
+            
         }
 
         public DbSet<Post> Posts { get; set; }
@@ -23,6 +24,21 @@ namespace PostService.Data
             //    .HasForeignKey("UserId")
             //    .HasPrincipalKey("ExternalUserId")
             //    .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder
+                .Entity<Post>()
+                .HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey("UserId")
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            //modelBuilder.Entity<Post>().HasOne(e => e.User).WithMany().
+
+            //.OnDelete(DeleteBehavior.NoAction)
+
+
+
 
         }
 

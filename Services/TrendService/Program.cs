@@ -1,5 +1,8 @@
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using TrendService.Data;
+using TrendService.Data.Repository;
 using TrendService.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,11 +20,20 @@ builder.Services.AddMassTransit(cfg =>
     });
 });
 
+builder.Services.AddDbContext<ApplicationContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
+});
+
+builder.Services.AddScoped<ITrendRepository, TrendRepository>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -7,6 +7,8 @@ using PostService.Data.Repository;
 using MassTransit;
 using PostService.Settings;
 using System.Reflection;
+using AutoMapper;
+using PostService.Mapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,21 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
 });
+
+var mapperConfig = new MapperConfiguration(mc =>
+{
+    mc.AddProfile(new MappingProfile());
+});
+IMapper mapper = mapperConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "PostService_";
+});
+
+builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();

@@ -18,4 +18,28 @@ export class CommonService {
     toastTextElement.innerHTML = message;
   }
 
+  public processProfileDisplayName(userName:any, displayName:any){
+    if(displayName == null || displayName == "" ){
+      return '@'+userName;
+    }else{
+      return displayName;
+    }
+  }
+
+  public colorHashtag(text:string){
+    let createdText = "";
+    let words = text.split(" ");
+    for (let index = 0; index < words.length; index++) {
+      let targetWord = words[index];
+      if(targetWord[0] == "#"){
+        targetWord = `<span class='text-primary' >${targetWord}</span>`;
+      }
+      createdText += targetWord + " ";
+    }
+
+    return createdText;
+  }
+
+
+
 }

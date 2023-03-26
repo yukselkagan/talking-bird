@@ -19,7 +19,7 @@ namespace PostService.Consumers
 
             var newUser = new User()
             {
-                ExternalUserId = message.UserId,
+                UserId = message.UserId,
                 UserName = message.UserName,
                 DisplayName = message.DisplayName
             };

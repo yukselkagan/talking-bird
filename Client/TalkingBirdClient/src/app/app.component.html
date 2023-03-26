@@ -1,3 +1,29 @@
 <app-brain></app-brain>
-<router-outlet></router-outlet>
+
+<ng-container >
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-3">
+        <app-sidebar></app-sidebar>
+      </div>
+
+      <div class="col-sm-5 border border-top-0 pb-3">
+        <router-outlet></router-outlet>
+      </div>
+
+      <div class="col-sm-4">
+        <app-sidebar-trend></app-sidebar-trend>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+
+
+
+
+
+<!-- <router-outlet></router-outlet> -->
+
 <app-toast></app-toast>
+<app-addition></app-addition>

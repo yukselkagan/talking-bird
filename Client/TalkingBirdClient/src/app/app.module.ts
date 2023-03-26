@@ -16,6 +16,12 @@ import { ToastComponent } from './components/toast/toast.component';
 import { BrainComponent } from './components/brain/brain.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { SettingsComponent } from './components/settings/settings.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { SidebarTrendComponent } from './components/sidebar-trend/sidebar-trend.component';
+import { ExploreComponent } from './components/explore/explore.component';
+import { AdditionComponent } from './components/addition/addition.component';
+import { MessageComponent } from './components/message/message.component';
+import { SaveComponent } from './components/save/save.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +35,12 @@ import { SettingsComponent } from './components/settings/settings.component';
     ToastComponent,
     BrainComponent,
     SettingsComponent,
+    SidebarComponent,
+    SidebarTrendComponent,
+    ExploreComponent,
+    AdditionComponent,
+    MessageComponent,
+    SaveComponent,
   ],
   imports: [
     BrowserModule,
